@@ -44,7 +44,7 @@ export interface Centroid {
 
 export interface Geometry {
   type: string
-  coordinates: number[][][]
+  coordinates: [number, number][][]
 }
 
 export interface Address {
