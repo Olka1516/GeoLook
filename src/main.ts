@@ -12,6 +12,7 @@ import InputText from 'primevue/inputtext'
 import Button from 'primevue/button'
 import IconField from 'primevue/iconfield'
 import InputIcon from 'primevue/inputicon'
+import Toast from 'primevue/toast'
 
 import 'primeicons/primeicons.css'
 import 'leaflet/dist/leaflet.css'
@@ -37,3 +38,4 @@ app.component('BaseButton', Button)
 app.component('IconField', IconField)
 app.component('InputIcon', InputIcon)
 app.component('Divider', Divider)
+app.component('Toast', Toast)

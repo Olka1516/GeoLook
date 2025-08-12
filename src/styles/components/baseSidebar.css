@@ -50,6 +50,10 @@
   overflow-y: auto;
 }
 
+.cards-small {
+  max-height: calc(100vh - 84px - 45px);
+}
+
 .loader-towns {
   padding-inline: 18px;
 }
@@ -58,7 +62,7 @@
   margin: 0;
 }
 
-@media (max-width: 786px) {
+@media (max-width: 768px) {
   .sidebar {
     max-height: 50vh;
     overflow-y: auto;
@@ -66,5 +70,9 @@
 
   .cards {
     max-height: calc(50vh - 94px);
+  }
+
+  .cards-small {
+    max-height: calc(50vh - 94px - 45px);
   }
 }

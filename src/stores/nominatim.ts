@@ -58,6 +58,7 @@ export const nominatimStore = defineStore(
           )
 
           state.towns.push(data)
+          console.log(state.towns)
           state.index = state.towns.length
         } catch {
           toast.add({

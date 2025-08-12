@@ -1,9 +1,10 @@
 <template>
-  <LMap v-model:zoom="zoom" :center="resCenter">
+  <LMap ref="mapRef" @ready="onMapReady">
     <LTileLayer
       url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
       layer-type="base"
       name="OpenStreetMap"
+      attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
     />
     <template v-for="(item, i) in shapes" :key="i">
       <LPolygon
@@ -24,21 +25,26 @@
 </template>
 
 <script setup lang="ts">
-import 'leaflet'
-import { center, polygon, featureCollection, lineString } from '@turf/turf'
-import { LMap, LTileLayer, LPolygon, LPolyline } from '@vue-leaflet/vue-leaflet'
-import { inject, onMounted, ref, type Ref, watch } from 'vue'
-import { useRoute } from 'vue-router'
 import type { Geometry, IdType, NominatimStore, PoligonStore, Shape } from '@/types'
+import { LMap, LPolygon, LPolyline, LTileLayer } from '@vue-leaflet/vue-leaflet'
+import 'leaflet'
+import type { Map as LeafletMap } from 'leaflet'
+import L from 'leaflet'
+import type { ComponentPublicInstance } from 'vue'
+import { inject, onMounted, ref, useTemplateRef, watch } from 'vue'
+import { useRoute } from 'vue-router'
+
+type LMapInstance = ComponentPublicInstance<{
+  leafletObject: LeafletMap
+}>
 
 const store = inject<NominatimStore>('nominatimStore')!
 const polygonStore = inject<PoligonStore>('polygonsStore')!
 
-const zoom = ref(6)
-const resCenter: Ref<number[]> = ref([0, 0])
-
 const shapes = ref<Shape[]>([])
 const route = useRoute()
+const mapRef = useTemplateRef<LMapInstance | null>('mapRef')
+const mapIsReady = ref(false)
 
 function normalizeGeometry(geometry: Geometry) {
   const result: Shape[] = []
@@ -65,54 +71,40 @@ function normalizeGeometry(geometry: Geometry) {
   return result
 }
 
-const getCoordinates = (items: Shape[], newZoom: number) => {
-  shapes.value = items
+const onMapReady = () => {
+  mapIsReady.value = true
+}
 
-  const polygons = shapes.value.filter((p) => p.type === 'Polygon').map((p) => polygon([p.coords]))
-  const lines = shapes.value.filter((p) => p.type === 'LineString').map((p) => lineString(p.coords))
-
-  let centerPolygons
-  if (polygons.length) {
-    centerPolygons = center(featureCollection(polygons))
+const onUpdateBounds = () => {
+  if (!shapes.value.length || !mapRef.value?.leafletObject || !mapIsReady.value) {
+    return
   }
 
-  let centerLines
-  if (lines.length) {
-    centerLines = center(featureCollection(lines))
-  }
+  const bounds = L.latLngBounds([])
 
-  let finalCenter: number[]
-  if (centerPolygons && centerLines) {
-    finalCenter = [
-      (centerPolygons.geometry.coordinates[0] + centerLines.geometry.coordinates[0]) / 2,
-      (centerPolygons.geometry.coordinates[1] + centerLines.geometry.coordinates[1]) / 2,
-    ]
-  } else if (centerPolygons) {
-    finalCenter = centerPolygons.geometry.coordinates
-  } else if (centerLines) {
-    finalCenter = centerLines.geometry.coordinates
-  } else {
-    finalCenter = [0, 0]
-  }
+  shapes.value.forEach((shape) => {
+    if (shape.coords.length > 0) {
+      bounds.extend(shape.coords)
+    }
+  })
 
-  setTimeout(() => {
-    zoom.value = newZoom
-    resCenter.value = [...finalCenter]
-  }, 300)
+  if (bounds.isValid()) {
+    mapRef.value.leafletObject.fitBounds(bounds, { padding: [0, 0] })
+  }
 }
 
 const loadMapData = async (id?: string) => {
   if (id) {
     const data = await store.getDetails(Number(id))
     const normalized = normalizeGeometry(data.geometry)
-    getCoordinates(normalized, 11)
+    shapes.value = normalized
   } else {
     polygonStore.getPolygons()
     const polys = polygonStore.polygons.map((coords) => ({
       type: 'Polygon',
       coords,
     }))
-    getCoordinates(polys as Shape[], 6)
+    shapes.value = polys as Shape[]
     await store.getTowns(polygonStore.polygons)
   }
 }
@@ -120,6 +112,8 @@ const loadMapData = async (id?: string) => {
 onMounted(() => {
   loadMapData(route.params.id as IdType)
 })
+
+watch([shapes, mapIsReady], onUpdateBounds)
 
 watch(
   () => route.params.id,

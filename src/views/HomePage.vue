@@ -3,6 +3,7 @@
     <MainLayout>
       <BaseMapView></BaseMapView>
     </MainLayout>
+    <Toast />
   </div>
 </template>
 
@@ -11,6 +12,7 @@ import BaseMapView from '@/components/BaseMapView.vue'
 import MainLayout from '@/layouts/MainLayout.vue'
 import { nominatimStore, polygonsStore } from '@/stores'
 import type { Poligon } from '@/types'
+import { storeToRefs } from 'pinia'
 import { provide } from 'vue'
 
 const store = nominatimStore()
@@ -27,7 +29,7 @@ const getTowns = async (poligons: Poligon) => {
 }
 
 provide('nominatimStore', {
-  towns: store.towns,
+  towns: storeToRefs(store).towns,
   townsDetails: store.townsDetails,
   getDetails,
   getTowns,

@@ -1,10 +1,11 @@
+import type { Ref } from 'vue'
 import type { City, Poligon } from './nominatim'
 
 export type IdType = string | undefined
 export type CoordinatesType = [number, number][]
 
 export interface NominatimStore {
-  towns: City[]
+  towns: Ref<City[]>
   townsDetails: Record<string, City>
   getDetails(id: number): Promise<City>
   getTowns(poligons: Poligon): Promise<void>

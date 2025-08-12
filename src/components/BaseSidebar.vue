@@ -6,14 +6,14 @@
         <InputText
           type="text"
           v-model="searchQuery"
-          placeholder="Введіть назву населеного пункту"
+          placeholder="Введіть назву населеного пункту..."
         />
       </IconField>
-      <p class="loader-towns" v-if="store.towns.length < polygonStore.polygons.length">
-        Loaded {{ store.towns.length }}/{{ polygonStore.polygons.length }}
+      <p class="loader-towns" v-if="towns.length < polygonStore.polygons.length">
+        Завантажено {{ towns.length }}/{{ polygonStore.polygons.length }}
       </p>
 
-      <div class="cards">
+      <div class="cards" :class="{ 'cards-small': towns.length < polygonStore.polygons.length }">
         <BaseCityCard
           v-for="city in filteredCountries"
           :key="city.place_id"
@@ -35,28 +35,29 @@
           <span class="tag">{{ store.townsDetails[countryId].type }}</span>
         </div>
         <Divider />
-        <h3>Tags</h3>
+        <h3>Теги</h3>
         <BaseTagsTable :city="store.townsDetails[countryId]" />
       </div>
-      <BaseButton rounded icon="pi pi-arrow-left" severity="info" @click="back" label="Back" />
+      <BaseButton rounded icon="pi pi-arrow-left" severity="info" @click="back" label="Назад" />
     </section>
     <BaseLoader v-else />
   </aside>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, type Ref, watch, inject } from 'vue'
-import BaseCityCard from './BaseCityCard.vue'
-import { useRoute, useRouter } from 'vue-router'
 import { ENDPOINTS } from '@/constants/endpoints'
-import BaseTagsTable from './BaseTagsTable.vue'
-import type { City, NominatimStore, PoligonStore } from '@/types'
+import type { NominatimStore, PoligonStore } from '@/types'
+import { computed, inject, ref, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
+import BaseCityCard from './BaseCityCard.vue'
 import BaseLoader from './BaseLoader.vue'
+import BaseTagsTable from './BaseTagsTable.vue'
 
 const store = inject<NominatimStore>('nominatimStore')!
 const polygonStore = inject<PoligonStore>('polygonsStore')!
 const searchQuery = ref('')
-const countries: Ref<City[]> = ref(store.towns || [])
+const towns = computed(() => store.towns.value)
+
 const route = useRoute()
 const router = useRouter()
 
@@ -64,8 +65,8 @@ const countryId = ref(route.params.id ? route.params.id.toString() : null)
 const mode = ref(countryId.value ? 'details' : 'list')
 
 const filteredCountries = computed(() => {
-  if (!countries.value.length) return []
-  const searchFiltered = countries.value.filter((country) =>
+  if (!towns.value.length) return []
+  const searchFiltered = towns.value.filter((country) =>
     country.display_name.split(', ')[0].toLowerCase().includes(searchQuery.value.toLowerCase()),
   )
 
@@ -83,10 +84,6 @@ const selectCity = async (placeId: number) => {
 const back = async () => {
   await router.push(ENDPOINTS.HOME)
 }
-
-onMounted(async () => {
-  countries.value = store.towns
-})
 
 watch(
   () => route.params.id,
