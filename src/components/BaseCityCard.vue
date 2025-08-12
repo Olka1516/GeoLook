@@ -3,36 +3,28 @@
     <template #title>{{ props?.city.display_name.split(',')[0] }}</template>
     <template #content>
       <Divider />
-      <div class="content">
-        <p>
+      <div class="tags-content">
+        <span class="tag">
           {{ props?.city.category }}
-        </p>
-        <p>
+        </span>
+        <span class="tag">
           {{ props?.city.type }}
-        </p>
+        </span>
       </div>
     </template>
   </Card>
 </template>
 
 <script setup lang="ts">
-import { Card, Divider } from 'primevue'
+import type { City } from '@/types'
+import { Card } from 'primevue'
 
 const props = defineProps<{
-  city: {
-    display_name: string
-    type: string
-    category: string
-  }
+  city: City
 }>()
 </script>
 
 <style scoped>
-.p-card {
-  cursor: pointer;
-}
-.content {
-  display: flex;
-  justify-content: space-between;
-}
+@import '@/styles/components/baseCityCard.css';
+@import '@/styles/general/tags.css';
 </style>

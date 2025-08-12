@@ -1,18 +1,21 @@
 import { createApp } from 'vue'
 import { createPinia } from 'pinia'
 import PrimeVue from 'primevue/config'
+import piniaPluginPersistedstate from 'pinia-plugin-persistedstate'
 
 import App from './App.vue'
 import router from './router'
-import Aura from '@primeuix/themes/aura'
 
+import Aura from '@primeuix/themes/aura'
 import InputText from 'primevue/inputtext'
 import Button from 'primevue/button'
-import piniaPluginPersistedstate from 'pinia-plugin-persistedstate'
+import IconField from 'primevue/iconfield'
+import InputIcon from 'primevue/inputicon'
 
 import 'primeicons/primeicons.css'
 import 'leaflet/dist/leaflet.css'
-import './index.css'
+import './styles/index.css'
+import { Divider } from 'primevue'
 
 const app = createApp(App)
 const pinia = createPinia()
@@ -24,11 +27,11 @@ app
   .use(PrimeVue, {
     theme: {
       preset: Aura,
-      options: {
-        darkModeSelector: false || 'none',
-      },
     },
   })
   .mount('#app')
 app.component('InputText', InputText)
 app.component('BaseButton', Button)
+app.component('IconField', IconField)
+app.component('InputIcon', InputIcon)
+app.component('Divider', Divider)

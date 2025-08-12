@@ -21,24 +21,25 @@
 import 'leaflet'
 import { center, polygon, featureCollection } from '@turf/turf'
 import { LMap, LTileLayer, LPolygon } from '@vue-leaflet/vue-leaflet'
-import { onMounted, ref, type Ref, watch } from 'vue'
-import { nominatimStore, polygonsStore } from '@/stores'
+import { inject, onMounted, ref, type Ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
+import type { CoordinatesType, IdType, NominatimStore, Poligon, PoligonStore } from '@/types'
 
-const store = nominatimStore()
-const polygonStore = polygonsStore()
+const store = inject<NominatimStore>('nominatimStore')!
+const polygonStore = inject<PoligonStore>('polygonsStore')!
+
 const zoom = ref(6)
 const resCenter: Ref<number[]> = ref([0, 0])
 
-const poligons: Ref<number[][][]> = ref([])
+const poligons: Ref<Poligon> = ref([])
 const route = useRoute()
 
-const getCoordinates = (newPoligons: number[][][], newZoom: number) => {
+const getCoordinates = (newPoligons: Poligon, newZoom: number) => {
   poligons.value = newPoligons
   const geoPolygons = newPoligons.map((coords) => polygon([coords]))
   const tempCenter = center(featureCollection(geoPolygons))
-  zoom.value = newZoom
   setTimeout(() => {
+    zoom.value = newZoom
     resCenter.value = [...tempCenter.geometry.coordinates]
   }, 300)
 }
@@ -47,10 +48,11 @@ const loadMapData = async (id?: string) => {
   if (id) {
     const data = await store.getDetails(Number(id))
     const coords = data.geometry.coordinates
-    const newPoligons = coords.map((coords) =>
+    console.log(data.geometry.coordinates)
+    const newPoligons = coords.map((coords: CoordinatesType) =>
       coords.map(([lat, lng]: [lat: number, lng: number]) => [lng, lat]),
     )
-    getCoordinates(newPoligons, 10)
+    getCoordinates(newPoligons, 11)
   } else {
     polygonStore.getPolygons()
     getCoordinates(polygonStore.polygons, 6)
@@ -59,21 +61,15 @@ const loadMapData = async (id?: string) => {
 }
 
 onMounted(() => {
-  loadMapData(route.params.id as string | undefined)
+  loadMapData(route.params.id as IdType)
 })
 
 watch(
   () => route.params.id,
   (newId) => {
-    loadMapData(newId as string | undefined)
+    loadMapData(newId as IdType)
   },
 )
 </script>
 
-<style scoped>
-html,
-body {
-  margin: 0;
-  padding: 0;
-}
-</style>
+<style scoped></style>

@@ -1,0 +1,12 @@
+.tags-content {
+  display: flex;
+  gap: 8px;
+}
+
+.tag {
+  color: #000;
+  border-radius: 6px;
+  padding: 4px 12px;
+  font-size: 12px;
+  background-color: #7192ff;
+}
