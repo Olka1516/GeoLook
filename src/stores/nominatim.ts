@@ -4,10 +4,12 @@ import { reactive, toRefs, type Reactive } from 'vue'
 import { center, points } from '@turf/turf'
 import { delay } from '@/utils'
 import type { City, Poligon } from '@/types'
+import { useToast } from 'primevue/usetoast'
 
 export const nominatimStore = defineStore(
   'nominatim',
   () => {
+    const toast = useToast()
     const state: Reactive<{
       towns: City[]
       townsDetails: { [key: string]: City }
@@ -45,7 +47,6 @@ export const nominatimStore = defineStore(
       }
 
       const newIndex = state.towns ? state.towns.length : 0
-      console.log(newIndex)
       for (let i = newIndex; i < poligons.length; i++) {
         try {
           const features = points(poligons[i])
@@ -59,7 +60,12 @@ export const nominatimStore = defineStore(
           state.towns.push(data)
           state.index = state.towns.length
         } catch {
-          console.error('error in nominatim store')
+          toast.add({
+            severity: 'error',
+            summary: 'Error Message',
+            detail: 'Something is wrong with the server, please try again later.',
+            life: 3000,
+          })
           state.index = state.towns.length
           break
         }
@@ -73,10 +79,18 @@ export const nominatimStore = defineStore(
       const townsData = getDataFromStorage()
       state.townsDetails = state.townsDetails || townsData.townsDetails || {}
       if (state.townsDetails && state.townsDetails[placeId]) return state.townsDetails[placeId]
-
-      const data = await getTownDetails(placeId)
-      state.townsDetails[placeId] = data
-      return data
+      try {
+        const data = await getTownDetails(placeId)
+        state.townsDetails[placeId] = data
+        return data
+      } catch {
+        toast.add({
+          severity: 'error',
+          summary: 'Error Message',
+          detail: 'Something is wrong with the server, please try again later.',
+          life: 3000,
+        })
+      }
     }
 
     return { ...toRefs(state), getTowns, getDetails }

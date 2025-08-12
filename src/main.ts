@@ -6,6 +6,7 @@ import piniaPluginPersistedstate from 'pinia-plugin-persistedstate'
 import App from './App.vue'
 import router from './router'
 
+import ToastService from 'primevue/toastservice'
 import Aura from '@primeuix/themes/aura'
 import InputText from 'primevue/inputtext'
 import Button from 'primevue/button'
@@ -24,6 +25,7 @@ pinia.use(piniaPluginPersistedstate)
 app
   .use(pinia)
   .use(router)
+  .use(ToastService)
   .use(PrimeVue, {
     theme: {
       preset: Aura,

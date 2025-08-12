@@ -4,26 +4,32 @@
       url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
       layer-type="base"
       name="OpenStreetMap"
-    ></LTileLayer>
-    <LPolygon
-      v-for="(value, i) in poligons"
-      :key="i"
-      :lat-lngs="value"
-      :color="polygonStore.colors[i]"
-      :fill="true"
-      :fillOpacity="0.5"
-      :fillColor="polygonStore.colors[i]"
     />
+    <template v-for="(item, i) in shapes" :key="i">
+      <LPolygon
+        v-if="item.type === 'Polygon'"
+        :lat-lngs="item.coords"
+        :color="polygonStore.colors[i % polygonStore.colors.length]"
+        :fill="true"
+        :fillOpacity="0.5"
+        :fillColor="polygonStore.colors[i % polygonStore.colors.length]"
+      />
+      <LPolyline
+        v-else-if="item.type === 'LineString'"
+        :lat-lngs="item.coords"
+        :color="polygonStore.colors[i % polygonStore.colors.length]"
+      />
+    </template>
   </LMap>
 </template>
 
 <script setup lang="ts">
 import 'leaflet'
-import { center, polygon, featureCollection } from '@turf/turf'
-import { LMap, LTileLayer, LPolygon } from '@vue-leaflet/vue-leaflet'
+import { center, polygon, featureCollection, lineString } from '@turf/turf'
+import { LMap, LTileLayer, LPolygon, LPolyline } from '@vue-leaflet/vue-leaflet'
 import { inject, onMounted, ref, type Ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
-import type { CoordinatesType, IdType, NominatimStore, Poligon, PoligonStore } from '@/types'
+import type { Geometry, IdType, NominatimStore, PoligonStore, Shape } from '@/types'
 
 const store = inject<NominatimStore>('nominatimStore')!
 const polygonStore = inject<PoligonStore>('polygonsStore')!
@@ -31,31 +37,83 @@ const polygonStore = inject<PoligonStore>('polygonsStore')!
 const zoom = ref(6)
 const resCenter: Ref<number[]> = ref([0, 0])
 
-const poligons: Ref<Poligon> = ref([])
+const shapes = ref<Shape[]>([])
 const route = useRoute()
 
-const getCoordinates = (newPoligons: Poligon, newZoom: number) => {
-  poligons.value = newPoligons
-  const geoPolygons = newPoligons.map((coords) => polygon([coords]))
-  const tempCenter = center(featureCollection(geoPolygons))
+function normalizeGeometry(geometry: Geometry) {
+  const result: Shape[] = []
+
+  if (geometry.type === 'Polygon') {
+    result.push({
+      type: 'Polygon',
+      coords: geometry.coordinates[0].map(([lat, lng]: [number, number]) => [lng, lat]),
+    })
+  } else if (geometry.type === 'MultiPolygon') {
+    geometry.coordinates.forEach((poly) => {
+      result.push({
+        type: 'Polygon',
+        coords: poly[0].map(([lat, lng]: [number, number]) => [lng, lat]),
+      })
+    })
+  } else if (geometry.type === 'LineString') {
+    result.push({
+      type: 'LineString',
+      coords: geometry.coordinates.map(([lat, lng]: [number, number]) => [lng, lat]),
+    })
+  }
+
+  return result
+}
+
+const getCoordinates = (items: Shape[], newZoom: number) => {
+  shapes.value = items
+
+  const polygons = shapes.value.filter((p) => p.type === 'Polygon').map((p) => polygon([p.coords]))
+  const lines = shapes.value.filter((p) => p.type === 'LineString').map((p) => lineString(p.coords))
+
+  let centerPolygons
+  if (polygons.length) {
+    centerPolygons = center(featureCollection(polygons))
+  }
+
+  let centerLines
+  if (lines.length) {
+    centerLines = center(featureCollection(lines))
+  }
+
+  let finalCenter: number[]
+  if (centerPolygons && centerLines) {
+    finalCenter = [
+      (centerPolygons.geometry.coordinates[0] + centerLines.geometry.coordinates[0]) / 2,
+      (centerPolygons.geometry.coordinates[1] + centerLines.geometry.coordinates[1]) / 2,
+    ]
+  } else if (centerPolygons) {
+    finalCenter = centerPolygons.geometry.coordinates
+  } else if (centerLines) {
+    finalCenter = centerLines.geometry.coordinates
+  } else {
+    finalCenter = [0, 0]
+  }
+
   setTimeout(() => {
     zoom.value = newZoom
-    resCenter.value = [...tempCenter.geometry.coordinates]
+    resCenter.value = [...finalCenter]
   }, 300)
 }
 
 const loadMapData = async (id?: string) => {
   if (id) {
     const data = await store.getDetails(Number(id))
-    const coords = data.geometry.coordinates
-    const newPoligons = coords.map((coords: CoordinatesType) =>
-      coords.map(([lat, lng]: [lat: number, lng: number]) => [lng, lat]),
-    )
-    getCoordinates(newPoligons, 11)
+    const normalized = normalizeGeometry(data.geometry)
+    getCoordinates(normalized, 11)
   } else {
     polygonStore.getPolygons()
-    getCoordinates(polygonStore.polygons, 6)
-    await store.getTowns(poligons.value)
+    const polys = polygonStore.polygons.map((coords) => ({
+      type: 'Polygon',
+      coords,
+    }))
+    getCoordinates(polys as Shape[], 6)
+    await store.getTowns(polygonStore.polygons)
   }
 }
 
@@ -70,5 +128,3 @@ watch(
   },
 )
 </script>
-
-<style scoped></style>

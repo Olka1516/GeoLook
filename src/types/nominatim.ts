@@ -42,10 +42,11 @@ export interface Centroid {
   coordinates: number[]
 }
 
-export interface Geometry {
-  type: string
-  coordinates: [number, number][][]
-}
+export type Geometry = PolygonGeometry | MultiPolygonGeometry | LineStringGeometry
+
+type PolygonGeometry = { type: 'Polygon'; coordinates: [number, number][][] }
+type MultiPolygonGeometry = { type: 'MultiPolygon'; coordinates: [number, number][][][] }
+type LineStringGeometry = { type: 'LineString'; coordinates: [number, number][] }
 
 export interface Address {
   localname: string

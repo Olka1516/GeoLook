@@ -15,3 +15,8 @@ export interface PoligonStore {
   colors: string[]
   getPolygons(): void
 }
+
+export interface Shape {
+  type: 'Polygon' | 'LineString'
+  coords: [number, number][]
+}
