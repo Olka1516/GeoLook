@@ -3,7 +3,7 @@ import { getTownDetails, getTownsByСontours } from '@/services'
 import { reactive, toRefs, type Reactive } from 'vue'
 import { center, points } from '@turf/turf'
 import { delay } from '@/utils'
-import type { City } from '@/types'
+import type { City, Poligon } from '@/types'
 
 export const nominatimStore = defineStore(
   'nominatim',
@@ -11,10 +11,12 @@ export const nominatimStore = defineStore(
     const state: Reactive<{
       towns: City[]
       townsDetails: { [key: string]: City }
+      index: number
     }> = reactive({
       towns: [],
       townsDetails: {},
       date: new Date(),
+      index: 0,
     })
 
     const getDataFromStorage = () => {
@@ -31,15 +33,20 @@ export const nominatimStore = defineStore(
       }
     }
 
-    const getTowns = async (poligons: number[][][]) => {
+    const getTowns = async (poligons: Poligon) => {
       const townsData = getDataFromStorage()
-      if (state.towns.length) return
-      else if (townsData.towns && townsData.towns.length) {
+      const hasSameLength = state.towns.length === poligons.length
+      const hasTownsData = Array.isArray(townsData.towns) && townsData.towns.length > 0
+      const townsDataMatchesLength = hasTownsData && townsData.towns.length === poligons.length
+
+      if (state.towns.length && hasSameLength) return
+      if (hasTownsData && !townsDataMatchesLength) {
         state.towns = townsData.towns
-        return
       }
 
-      for (let i = 0; i < poligons.length; i++) {
+      const newIndex = state.towns ? state.towns.length : 0
+      console.log(newIndex)
+      for (let i = newIndex; i < poligons.length; i++) {
         try {
           const features = points(poligons[i])
           const tempCenter = center(features)
@@ -50,18 +57,21 @@ export const nominatimStore = defineStore(
           )
 
           state.towns.push(data)
+          state.index = state.towns.length
         } catch {
           console.error('error in nominatim store')
+          state.index = state.towns.length
+          break
         }
         if (i < poligons.length - 1) {
-          await delay(1100)
+          await delay(1500)
         }
       }
     }
 
     const getDetails = async (placeId: number) => {
       const townsData = getDataFromStorage()
-      state.townsDetails = townsData.townsDetails || {}
+      state.townsDetails = state.townsDetails || townsData.townsDetails || {}
       if (state.townsDetails && state.townsDetails[placeId]) return state.townsDetails[placeId]
 
       const data = await getTownDetails(placeId)

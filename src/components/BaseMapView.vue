@@ -48,7 +48,6 @@ const loadMapData = async (id?: string) => {
   if (id) {
     const data = await store.getDetails(Number(id))
     const coords = data.geometry.coordinates
-    console.log(data.geometry.coordinates)
     const newPoligons = coords.map((coords: CoordinatesType) =>
       coords.map(([lat, lng]: [lat: number, lng: number]) => [lng, lat]),
     )

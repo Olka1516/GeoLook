@@ -9,6 +9,9 @@
           placeholder="Введіть назву населеного пункту"
         />
       </IconField>
+      <p class="loader-towns" v-if="store.towns.length < polygonStore.polygons.length">
+        Loaded {{ store.towns.length }}/{{ polygonStore.polygons.length }}
+      </p>
 
       <div class="cards">
         <BaseCityCard
@@ -37,6 +40,7 @@
       </div>
       <BaseButton rounded icon="pi pi-arrow-left" severity="info" @click="back" label="Back" />
     </section>
+    <BaseLoader v-else />
   </aside>
 </template>
 
@@ -46,9 +50,11 @@ import BaseCityCard from './BaseCityCard.vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ENDPOINTS } from '@/constants/endpoints'
 import BaseTagsTable from './BaseTagsTable.vue'
-import type { City, NominatimStore } from '@/types'
+import type { City, NominatimStore, PoligonStore } from '@/types'
+import BaseLoader from './BaseLoader.vue'
 
 const store = inject<NominatimStore>('nominatimStore')!
+const polygonStore = inject<PoligonStore>('polygonsStore')!
 const searchQuery = ref('')
 const countries: Ref<City[]> = ref(store.towns || [])
 const route = useRoute()

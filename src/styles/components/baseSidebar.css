@@ -50,6 +50,10 @@
   overflow-y: auto;
 }
 
+.loader-towns {
+  padding-inline: 18px;
+}
+
 .p-divider {
   margin: 0;
 }
