@@ -1,0 +1,19 @@
+.info-table {
+  border-collapse: collapse;
+  background-color: #1e1e1e;
+  color: #fff;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid #444;
+}
+
+.info-table td {
+  border: 1px solid #444;
+  padding: 6px 12px;
+  white-space: normal;
+  word-break: break-word;
+}
+
+.info-table tr:nth-child(even) {
+  background-color: #2a2a2a;
+}

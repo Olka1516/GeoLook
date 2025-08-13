@@ -9,6 +9,7 @@ export const polygonsStore = defineStore('polygons', () => {
   })
 
   const getPolygons = () => {
+    if (state.polygons.length) return
     polygonsExample.forEach((element, i) => {
       element.polygon.forEach((cord) => {
         if (!state.polygons[i]) state.polygons[i] = []

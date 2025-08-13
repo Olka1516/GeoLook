@@ -1,0 +1,78 @@
+.sidebar {
+  background-color: #222529;
+  height: 100vh;
+  width: 100%;
+}
+
+.p-iconfield {
+  margin-top: 18px;
+  margin-inline: 18px;
+  width: calc(100% - 36px);
+}
+
+.p-inputtext {
+  width: 100%;
+}
+
+.main-content {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.id {
+  color: #7192ff;
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.details {
+  align-items: flex-end;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  height: 100%;
+  padding: 18px;
+}
+
+.cards {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-height: calc(100vh - 84px);
+  padding-inline: 18px;
+  overflow: hidden;
+  overflow-y: auto;
+}
+
+.cards-small {
+  max-height: calc(100vh - 84px - 45px);
+}
+
+.loader-towns {
+  padding-inline: 18px;
+}
+
+.p-divider {
+  margin: 0;
+}
+
+@media (max-width: 768px) {
+  .sidebar {
+    max-height: 50vh;
+    overflow-y: auto;
+  }
+
+  .cards {
+    max-height: calc(50vh - 94px);
+  }
+
+  .cards-small {
+    max-height: calc(50vh - 94px - 45px);
+  }
+}

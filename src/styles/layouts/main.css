@@ -1,0 +1,14 @@
+.container {
+  display: grid;
+  grid-template-columns: minmax(300px, 1.2fr) minmax(300px, 4fr);
+}
+
+@media (max-width: 768px) {
+  .container {
+    grid-template-columns: 1fr;
+  }
+
+  main {
+    height: 50vh;
+  }
+}
