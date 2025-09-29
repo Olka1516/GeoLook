@@ -1,0 +1,9 @@
+.p-card {
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.p-card:hover {
+  background-color: #181b20;
+}
